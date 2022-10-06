@@ -13,6 +13,7 @@ import { PasswordService } from './password.service';
 import { SignupInput } from './dto/signup.input';
 import { Token } from './models/token.model';
 import { SecurityConfig } from 'src/common/configs/config.interface';
+import { LoginInput } from './dto/login.input';
 
 @Injectable()
 export class AuthService {
@@ -51,7 +52,8 @@ export class AuthService {
     }
   }
 
-  async login(email: string, password: string): Promise<Token> {
+  async login(payload: LoginInput): Promise<Token> {
+    const { email, password } = payload;
     const user = await this.prisma.user.findUnique({ where: { email } });
 
     if (!user) {
@@ -89,7 +91,9 @@ export class AuthService {
   }
 
   private generateAccessToken(payload: { userId: string }): string {
-    return this.jwtService.sign(payload);
+    return this.jwtService.sign(payload, {
+      secret: this.configService.get('JWT_ACCESS_SECRET'),
+    });
   }
 
   private generateRefreshToken(payload: { userId: string }): string {
